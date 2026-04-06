@@ -1,0 +1,16 @@
+{
+  "dataset": "one_billion",
+  "seed": 42,
+  "normalization": {
+    "lowercase": true,
+    "punctuation": "kept compact ASCII punctuation . , ! ? ; : ' \" - ( )",
+    "non_ascii": "removed or replaced",
+    "whitespace": "collapsed to single spaces"
+  },
+  "num_samples": {
+    "train": 15000,
+    "validation": 15000,
+    "test": 15000
+  },
+  "one_billion_subset_fraction": 0.01
+}
