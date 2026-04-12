@@ -1,0 +1,16 @@
+{
+  "dataset": "text8",
+  "seed": 42,
+  "normalization": {
+    "lowercase": true,
+    "punctuation": "kept compact ASCII punctuation . , ! ? ; : ' \" - ( )",
+    "non_ascii": "removed or replaced",
+    "whitespace": "collapsed to single spaces"
+  },
+  "num_samples": {
+    "train": 76524,
+    "validation": 4251,
+    "test": 4252
+  },
+  "one_billion_subset_fraction": null
+}

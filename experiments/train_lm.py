@@ -144,7 +144,7 @@ def parse_args() -> argparse.Namespace:
         choices=["wikitext103", "text8", "one_billion", "enwik8"],
     )
     parser.add_argument(
-        "--tokenizer", type=str, default="word", choices=["word", "char", "bpe"]
+        "--tokenizer", type=str, default="bpe", choices=["word", "char", "bpe"]
     )
     parser.add_argument("--word-vocab-size", type=int, default=50000)
     parser.add_argument("--bpe-vocab-size", type=int, default=10000)

@@ -1,0 +1,17 @@
+{
+  "train": {
+    "vocab_size": 16000.0,
+    "avg_sequence_length": 92.85539035935729,
+    "compression_ratio": 0.2074178412006346
+  },
+  "validation": {
+    "vocab_size": 16000.0,
+    "avg_sequence_length": 96.17635107679806,
+    "compression_ratio": 0.21224300205167937
+  },
+  "test": {
+    "vocab_size": 16000.0,
+    "avg_sequence_length": 92.65375302663438,
+    "compression_ratio": 0.21461426846533435
+  }
+}
