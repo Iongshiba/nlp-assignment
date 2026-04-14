@@ -1,0 +1,20 @@
+{
+  "train": {
+    "vocab_size": 4.0,
+    "avg_sequence_length": 0.0,
+    "oov_rate": 0.0,
+    "compression_ratio": 0.0
+  },
+  "validation": {
+    "vocab_size": 4.0,
+    "avg_sequence_length": 0.0,
+    "oov_rate": 0.0,
+    "compression_ratio": 0.0
+  },
+  "test": {
+    "vocab_size": 4.0,
+    "avg_sequence_length": 0.0,
+    "oov_rate": 0.0,
+    "compression_ratio": 0.0
+  }
+}
