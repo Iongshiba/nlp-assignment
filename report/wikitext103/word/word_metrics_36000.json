@@ -1,0 +1,21 @@
+{
+  "train": {
+    "vocab_size": 36000.0,
+    "avg_sequence_length": 86.06293752916861,
+    "oov_rate": 0.7265710093596662,
+    "compression_ratio": 0.19224504512447338
+  },
+  "validation": {
+    "vocab_size": 36000.0,
+    "avg_sequence_length": 86.56277935798455,
+    "oov_rate": 3.6661330979998215,
+    "compression_ratio": 0.19102766897659937
+  },
+  "test": {
+    "vocab_size": 36000.0,
+    "avg_sequence_length": 82.82186094776894,
+    "oov_rate": 4.358539580183597,
+    "compression_ratio": 0.19184061648461792
+  },
+  "elapsed_time_seconds": 0.9054402000037953
+}

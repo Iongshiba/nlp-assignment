@@ -13,5 +13,6 @@
     "vocab_size": 50000.0,
     "avg_sequence_length": 208.95155221072437,
     "compression_ratio": 0.17736558617092146
-  }
+  },
+  "elapsed_time_seconds": 43.289145599999756
 }
