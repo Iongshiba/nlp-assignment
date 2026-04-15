@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import time
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -105,7 +106,7 @@ class WordTokenizer:
 
 
 def compute_word_metrics(
-    tokenizer: WordTokenizer, samples: List[str], include_oov: bool = False
+    tokenizer: WordTokenizer, samples: List[str], include_oov: bool = True
 ) -> Dict[str, float]:
     sequence_lengths: List[int] = []
     total_tokens = 0
@@ -152,35 +153,43 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--processed-dataset-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--vocab-size", type=int, default=50000)
+    parser.add_argument(
+        "--vocab-sizes", type=int, nargs="+", default=[2000, 8000, 16000, 32000, 50000],
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+
     train_samples = _read_split(args.processed_dataset_dir / "train.txt")
     valid_samples = _read_split(args.processed_dataset_dir / "validation.txt")
     test_samples = _read_split(args.processed_dataset_dir / "test.txt")
 
-    tokenizer = WordTokenizer(WordTokenizerConfig(vocab_size=args.vocab_size))
-    tokenizer.train(train_samples)
-
-    tokenizer_out = args.output_dir / "word_tokenizer.json"
-    tokenizer.save(tokenizer_out)
-
-    metrics = {
-        "train": compute_word_metrics(tokenizer, train_samples),
-        "validation": compute_word_metrics(tokenizer, valid_samples),
-        "test": compute_word_metrics(tokenizer, test_samples, include_oov=True),
-    }
-
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    metrics_out = args.output_dir / "word_metrics.json"
-    with metrics_out.open("w", encoding="utf-8") as fout:
-        json.dump(metrics, fout, indent=2)
 
-    print(f"Saved tokenizer to {tokenizer_out}")
-    print(f"Saved metrics to {metrics_out}")
+    for vocab_size in args.vocab_sizes:
+        print(f"Training word tokenizer with vocab size = {vocab_size}")
+        experiment_start = time.perf_counter()
+        tokenizer = WordTokenizer(WordTokenizerConfig(vocab_size=vocab_size))
+        tokenizer.train(train_samples)
+
+        tokenizer_out = args.output_dir / f"word_tokenizer_{vocab_size}.json"
+        tokenizer.save(tokenizer_out)
+
+        metrics = {
+            "train": compute_word_metrics(tokenizer, train_samples, True),
+            "validation": compute_word_metrics(tokenizer, valid_samples, True),
+            "test": compute_word_metrics(tokenizer, test_samples, True),
+            "elapsed_time_seconds": time.perf_counter() - experiment_start,
+        }
+
+        metrics_out = args.output_dir / f"word_metrics_{vocab_size}.json"
+        with metrics_out.open("w", encoding="utf-8") as fout:
+            json.dump(metrics, fout, indent=2)
+
+        print(f"Saved tokenizer to {tokenizer_out}")
+        print(f"Saved metrics to {metrics_out}")
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
@@ -141,6 +142,7 @@ def main() -> None:
 
     for vocab_size in args.vocab_sizes:
         print(f"Training BPE tokenizer with vocab size = {vocab_size}")
+        experiment_start = time.perf_counter()
         tokenizer = BPETokenizerWrapper(BPETokenizerConfig(vocab_size=vocab_size))
         tokenizer.train(train_samples)
 
@@ -151,6 +153,7 @@ def main() -> None:
             "train": compute_bpe_metrics(tokenizer, train_samples),
             "validation": compute_bpe_metrics(tokenizer, valid_samples),
             "test": compute_bpe_metrics(tokenizer, test_samples),
+            "elapsed_time_seconds": time.perf_counter() - experiment_start,
         }
 
         metrics_out = args.output_dir / f"bpe_metrics_{vocab_size}.json"

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List
@@ -133,35 +134,43 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--processed-dataset-dir", type=Path, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
-    parser.add_argument("--max-vocab-size", type=int, default=None)
+    parser.add_argument(
+        "--vocab-sizes", type=int, nargs="+", default=[2000, 8000, 16000, 32000, 50000],
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
+
     train_samples = _read_split(args.processed_dataset_dir / "train.txt")
     valid_samples = _read_split(args.processed_dataset_dir / "validation.txt")
     test_samples = _read_split(args.processed_dataset_dir / "test.txt")
 
-    tokenizer = CharTokenizer(CharTokenizerConfig(max_vocab_size=args.max_vocab_size))
-    tokenizer.train(train_samples)
-
-    tokenizer_out = args.output_dir / "char_tokenizer.json"
-    tokenizer.save(tokenizer_out)
-
-    metrics = {
-        "train": compute_char_metrics(tokenizer, train_samples),
-        "validation": compute_char_metrics(tokenizer, valid_samples),
-        "test": compute_char_metrics(tokenizer, test_samples),
-    }
-
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    metrics_out = args.output_dir / "char_metrics.json"
-    with metrics_out.open("w", encoding="utf-8") as fout:
-        json.dump(metrics, fout, indent=2)
 
-    print(f"Saved tokenizer to {tokenizer_out}")
-    print(f"Saved metrics to {metrics_out}")
+    for vocab_size in args.vocab_sizes:
+        print(f"Training char tokenizer with vocab size = {vocab_size}")
+        experiment_start = time.perf_counter()
+        tokenizer = CharTokenizer(CharTokenizerConfig(max_vocab_size=vocab_size))
+        tokenizer.train(train_samples)
+
+        tokenizer_out = args.output_dir / f"char_tokenizer_{vocab_size}.json"
+        tokenizer.save(tokenizer_out)
+
+        metrics = {
+            "train": compute_char_metrics(tokenizer, train_samples),
+            "validation": compute_char_metrics(tokenizer, valid_samples),
+            "test": compute_char_metrics(tokenizer, test_samples),
+            "elapsed_time_seconds": time.perf_counter() - experiment_start,
+        }
+
+        metrics_out = args.output_dir / f"char_metrics_{vocab_size}.json"
+        with metrics_out.open("w", encoding="utf-8") as fout:
+            json.dump(metrics, fout, indent=2)
+
+        print(f"Saved tokenizer to {tokenizer_out}")
+        print(f"Saved metrics to {metrics_out}")
 
 
 if __name__ == "__main__":
