@@ -1,0 +1,2 @@
+dataset,tokenizer,test_perplexity,test_eval_time_seconds
+wikitext103,word,78.9854958654937,2.8160235499999544

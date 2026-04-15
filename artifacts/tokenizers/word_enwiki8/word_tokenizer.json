@@ -1,0 +1,11 @@
+{
+  "config": {
+    "vocab_size": 5000
+  },
+  "id_to_token": [
+    "<PAD>",
+    "<UNK>",
+    "<BOS>",
+    "<EOS>"
+  ]
+}
