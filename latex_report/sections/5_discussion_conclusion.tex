@@ -1,0 +1,34 @@
+\section{Discussion and Conclusion}
+
+\subsection{Insights and Limitations}
+The experiments confirm that tokenization is not an isolated preprocessing choice. It shapes the vocabulary space, sequence geometry, and optimization behavior of the downstream language model.
+
+\begin{itemize}
+    \item \textbf{Word-level tokenization} remains attractive when short sequences are the top priority, but its residual OOV rate limits robustness on realistic corpora.
+    \item \textbf{Character-level tokenization} guarantees lexical coverage, yet its long sequences introduce a major computational burden and make modeling long-range dependencies harder.
+    \item \textbf{BPE} consistently provides the strongest balance. It preserves near-word-level compression while retaining the ability to decompose rare words and remove OOV failures.
+\end{itemize}
+
+However, extrinsic evaluation reveals that linguistic efficiency does not always translate to better modeling performance. A critical \textbf{optimization bottleneck} was observed when scaling the vocabulary size. While a larger $K$ provides better sequence compression and captures more semantics per token, the resulting sparsity in the embedding space can halt gradient-based convergence. For our specific LSTM architecture, a smaller vocabulary allowed the model to calculate optimization momentum more effectively due to higher update frequency per token, leading to faster absolute convergence in a limited training budget.
+
+The study has several limitations. The language-model experiments were conducted with a relatively small LSTM and a fixed training budget, so the conclusions about optimal vocabulary size are architecture-dependent. In addition, perplexity values across different tokenization families are not perfectly comparable because the prediction units themselves differ. Therefore, perplexity must be interpreted together with sequence length, coverage, and throughput.
+
+\subsection{Conclusion}
+This report studied text preprocessing and tokenization for large-scale language modeling through both theoretical analysis and empirical evaluation. On the four benchmark datasets---One Billion Word, WikiText-103, Text8, and Enwik8---the results show a consistent trade-off:
+\begin{itemize}
+    \item Word-level tokenization offers strong compression but suffers from OOV limitations;
+    \item Character-level tokenization offers complete coverage but incurs severe sequence inflation;
+    \item BPE best balances lexical coverage, compression, and computational efficiency.
+\end{itemize}
+
+The results validate BPE as the de facto tokenization strategy for modern NLP pipelines. It effectively eliminates the "information-computation" bottleneck, achieving proximity to word-level density while maintaining absolute lexical coverage.
+
+\subsection{Recommendations}
+This report studied text preprocessing and tokenization for large-scale language modeling through theoretical analysis and empirical evaluation. On the four benchmark datasets---One Billion Word, WikiText-103, Text8, and Enwik8---the results show a consistent trade-off:
+\begin{itemize}
+    \item \textbf{Word-level tokenization} offers strong compression but suffers from OOV limitations; it remains computationally attractive for training speed when the domain is strictly limited.
+    \item \textbf{Character-level tokenization} offers complete coverage and minimizes token-level perplexity in current runs, but incurs severe sequence inflation and training costs.
+    \item \textbf{BPE} best balances lexical coverage, compression, and computational efficiency, removing the OOV penalty while approaching word-level throughput.
+\end{itemize}
+
+As the final recommendation, the selection of an optimal tokenizer should depend on whether the specific application prioritizes training speed, lexical robustness, or semantic resolution. For general-purpose large-scale language modeling, BPE with a vocabulary budget in the range of 30,000 to 50,000 tokens provides the most robust and scalable trade-off. Future work can extend the study by testing transformer-based language models, broader multi-lingual datasets, and more complex token-level optimization strategies.

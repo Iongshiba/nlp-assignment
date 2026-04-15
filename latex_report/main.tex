@@ -1,0 +1,217 @@
+\documentclass[a4paper]{article}
+\usepackage[T5]{fontenc}
+\usepackage[utf8]{inputenc}
+% \usepackage{vntex}
+\usepackage[english]{babel}
+%\usepackage[utf8]{inputenc}
+%\usepackage[francais]{babel}
+\usepackage{geometry}
+\geometry{
+  a4paper,
+  left=2.5cm,
+  right=2.5cm,
+  top=2.5cm,
+  bottom=2.5cm
+}
+\usepackage{amssymb,epsfig,latexsym,multicol,array,hhline,fancyhdr}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{lastpage}
+\usepackage{comment}
+\usepackage{enumitem}
+\usepackage[lined,boxed,commentsnumbered]{algorithm2e}
+\usepackage{enumerate}
+\usepackage{color}
+\usepackage{graphicx}							% Standard graphics package
+\usepackage{array}
+\usepackage{tabularx, caption}
+\usepackage{multirow}
+\usepackage{wrapfig,lipsum,booktabs}
+\usepackage[framemethod=tikz]{mdframed}% For highlighting paragraph backgrounds
+\usepackage{multicol}
+\usepackage{rotating}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{epsfig}
+\usepackage{tikz}
+\usetikzlibrary{shapes.geometric, arrows, positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{listings}
+\usepackage{textcomp}
+\usepackage{gensymb}
+\usepackage{float}
+% \usepackage[demo]{graphicx} % Removed to avoid option clash
+\usepackage{hyperref}
+
+\hypersetup{urlcolor=blue,linkcolor=black,citecolor=black,colorlinks=true}
+%\usepackage{pstcol} 								% PSTricks with the standard color package
+
+\newtheorem{theorem}{{\bf Theorem}}
+\newtheorem{property}{{\bf Property}}
+\newtheorem{proposition}{{\bf Proposition}}
+\newtheorem{corollary}[proposition]{{\bf Corollary}}
+\newtheorem{lemma}[proposition]{{\bf Lemma}}
+
+\AtBeginDocument{\renewcommand*\contentsname{Contents}}
+\AtBeginDocument{\renewcommand*\refname{References}}
+\renewcommand*{\figurename}{Figure }
+
+\newlength{\imageLength}
+\setlength{\imageLength}{0.99\textwidth}
+\setlength{\parindent}{0pt}
+
+\NewDocumentCommand{\codeword}{v}{%
+\texttt{\textcolor{blue}{#1}}%
+}
+
+% \everymath{\color{blue}}
+%\usepackage{fancyhdr}
+\setlength{\headheight}{40pt}
+\pagestyle{fancy}
+\fancyhead{} % clear all header fields
+\fancyhead[L]{
+ \begin{tabular}{rl}
+    \begin{picture}(25,15)(0,0)
+    \put(0,-8){\includegraphics[width=10mm, height=10mm]{graphics/HCMUT.png}}
+    %\put(0,-8){\epsfig{width=10mm,figure=hcmut.eps}}
+   \end{picture}&
+	%\includegraphics[width=8mm, height=8mm]{hcmut.png} & %
+	\begin{tabular}{l}
+		\textbf{\bf \ttfamily HO CHI MINH CITY
+UNIVERSITY OF TECHNOLOGY}\\
+		\textbf{\bf \ttfamily FACULTY OF COMPUTER SCIENCE AND ENGINEERING}
+	\end{tabular}
+ \end{tabular}
+}
+\fancyhead[R]{
+	\begin{tabular}{l}
+		\tiny \bf \\
+		\tiny \bf
+	\end{tabular}  }
+\fancyfoot{} % clear all footer fields
+\fancyfoot[L]{\scriptsize \ttfamily Natural Language Processing (CO3086)}
+\fancyfoot[R]{\scriptsize \ttfamily Page {\thepage}/\pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0.3pt}
+
+
+%%%
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{3}
+\makeatletter
+\newcounter {subsubsubsection}[subsubsection]
+\renewcommand\thesubsubsubsection{\thesubsubsection .\@alph\c@subsubsubsection}
+\newcommand\subsubsubsection{\@startsection{subsubsubsection}{4}{\z@}%
+                                     {-3.25ex\@plus -1ex \@minus -.2ex}%
+                                     {1.5ex \@plus .2ex}%
+                                     {\normalfont\normalsize\bfseries}}
+\newcommand*\l@subsubsubsection{\@dottedtocline{3}{10.0em}{4.1em}}
+\newcommand*{\subsubsubsectionmark}[1]{}
+\makeatother
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+	language=Matlab,
+	aboveskip=3mm,
+	belowskip=3mm,
+	showstringspaces=false,
+	columns=flexible,
+	basicstyle={\small\ttfamily},
+	numbers=none,
+	numberstyle=\tiny\color{gray},
+	keywordstyle=\color{blue},
+	commentstyle=\color{dkgreen},
+	stringstyle=\color{mauve},
+	breaklines=true,
+	breakatwhitespace=true,
+	tabsize=3,
+	numbers=left,
+	stepnumber=1,
+	numbersep=1pt,
+	firstnumber=1,
+	numberfirstline=true
+}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{titlepage}
+\begin{center}
+VIETNAM NATIONAL UNIVERSITY, HO CHI MINH CITY \\
+UNIVERSITY OF TECHNOLOGY \\
+FACULTY OF COMPUTER SCIENCE AND ENGINEERING
+\end{center}
+
+\vspace{1cm}
+
+\begin{figure}[h!]
+\begin{center}
+\includegraphics[width=3cm]{graphics/hcmut.png}
+\end{center}
+\end{figure}
+
+\vspace{0.8cm}
+
+\begin{center}
+\textbf{{\Large NATURAL LANGUAGE PROCESSING (CO3086)}}\\
+\vspace{1.0cm}
+\textbf{{\large ASSIGNMENT REPORT}}\\
+\vspace{0.4cm}
+\rule{\linewidth}{0.5pt}
+\vspace{1.0cm}
+{\LARGE\bfseries Analyzing and Comparing Text Preprocessing and\\[-1.0ex]
+Tokenization Methods for Large-Scale Language Modeling\par}
+\vspace{1.0cm}
+\rule{\linewidth}{0.5pt}
+\vspace{1.0cm}
+\textbf{{\Large CC01 - Group 03}}\\
+\end{center}
+
+\vspace{0.5cm}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rl}
+\textbf{Advisors:}
+& Ph.D Trương Vĩnh Lân \\
+& Mr. Bùi Khánh Vĩnh \\
+\textbf{Students:}
+& Võ Hoàng Phúc - 2252650\\
+& Vũ Minh Quân - 2212828\\
+& Vũ Hoàng Tùng - 2252886\\
+& Trần Đặng Hiển Long - 2252449\\
+\end{tabular}
+\end{table}
+
+\begin{center}
+{\footnotesize HO CHI MINH CITY, APRIL 2026}
+\end{center}
+\end{titlepage}
+
+\thispagestyle{empty}
+\newpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\tableofcontents
+\newpage
+\input{sections/0_assignment}
+\newpage
+\input{sections/1_introduction}
+\input{sections/2_tokenization_methods}
+\input{sections/3_comparative_analysis}
+\input{sections/4_experimental_results}
+\input{sections/5_discussion_conclusion}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% \bibliographystyle{ieeetr}
+%\bibliographystyle{ACM-Reference-Format-Journals}
+\bibliographystyle{ieeetr}
+\nocite{*}
+\bibliography{ref}
+\end{document}

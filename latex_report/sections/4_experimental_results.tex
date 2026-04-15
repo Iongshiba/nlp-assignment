@@ -1,0 +1,156 @@
+\section{Experimental Setup and Results}
+
+\subsection{Experimental Setup}
+This section follows the experimental configuration consolidated by Trần Đặng Hiển Long and uses it as the authoritative setup for the final report. The study evaluates three tokenization strategies---word-level, character-level, and BPE---on four benchmark corpora.
+
+\subsubsection{Preprocessing Pipeline}
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[node distance=1.5cm, every node/.style={fill=white, font=\footnotesize}, align=center]
+        \node (raw) [draw, rectangle] {Raw Text \\ (e.g., WikiText-103)};
+        \node (norm) [draw, rectangle, below of=raw] {Normalization \\ (Lowercasing, Smart Quotes $\rightarrow$ ASCII)};
+        \node (clean) [draw, rectangle, below of=norm] {Character Filtering \\ (Regex Policy)};
+        \node (chunk) [draw, rectangle, below of=clean] {Chunking \\ (Text8: 200w / Enwik8: 1000ch)};
+        \node (token) [draw, diamond, aspect=2, below of=chunk, node distance=2cm] {Tokenization Type?};
+        
+        \draw [->] (raw) -- (norm);
+        \draw [->] (norm) -- (clean);
+        \draw [->] (clean) -- (chunk);
+        \draw [->] (chunk) -- (token);
+        
+        \node (word) [draw, rectangle, below left of=token, node distance=2.5cm, xshift=-1cm] {Word-level};
+        \node (char) [draw, rectangle, below of=token, node distance=2.5cm] {Character-level};
+        \node (bpe) [draw, rectangle, below right of=token, node distance=2.5cm, xshift=1cm] {BPE (Subword)};
+        
+        \draw [->] (token) -| (word);
+        \draw [->] (token) -- (char);
+        \draw [->] (token) -| (bpe);
+    \end{tikzpicture}
+    \caption{Preprocessing and Tokenization Flowchart}
+    \label{fig:pipeline_flow}
+\end{figure}
+
+The preprocessing pipeline uses a fixed random seed of 42. Before tokenization, text is lowercased, tabs and line breaks are normalized, and repeated whitespace is collapsed. A strict character-filtering regular expression is applied to keep only alphanumeric symbols, spaces, and a selected punctuation subset: \texttt{[a-z0-9\textbackslash s\textbackslash .\textbackslash ,!\textbackslash ?;:'"\textbackslash -\textbackslash (\textbackslash )]}.
+
+\subsubsection{Datasets and Chunking}
+Existing train/validation/test splits are reused for \textit{One Billion Word} and \textit{WikiText-103}. For \textit{Text8} and \textit{Enwik8}, the data is shuffled and split into 90\% train, 5\% validation, and 5\% test. To manage sequence geometry during training, \textit{Text8} is chunked into 200-word segments, while \textit{Enwik8} uses segments of 1000 characters.
+
+\subsubsection{Tokenizer Configuration}
+All tokenizers share the special tokens \texttt{<PAD>}, \texttt{<UNK>}, \texttt{<BOS>}, and \texttt{<EOS>}.
+\begin{itemize}
+    \item \textbf{Word-level:} Regex-based segmentation with a target vocabulary sweep.
+    \item \textbf{Character-level:} Character-set vocabulary derived from the training corpus.
+    \item \textbf{BPE:} Implemented via the Hugging Face \texttt{tokenizers} library with a \texttt{Whitespace()} pre-tokenizer.
+\end{itemize}
+
+\subsubsection{Language Modeling Configuration}
+To examine downstream effects, we train an LSTM-based language model with the following shared hyperparameters: embedding size 128, hidden size 256, 2 layers, batch size 32, sequence length 128, learning rate 0.001, and random seed 42. Perplexity and avg. epoch time are calculated across a fixed budget of 3--5 epochs depending on the comparison.
+
+\subsection{Tokenization Evaluation}
+The performance metrics for each tokenizer are summarized across multiple configurations. The data reveals a clear inverse relationship between the vocabulary size and the resulting average sequence length ($L_{avg}$), alongside the critical trade-off with the Out-of-Vocabulary (OOV) rate.
+
+\input{sections/metric}
+
+Our results confirm that BPE effectively serves as a "sweet spot" in the tokenization landscape. Although Word-level tokenization provides the theoretical baseline for compression (highlighted in \textbf{bold} in Table~\ref{tab:final_relative_results}), it consistently fails due to high OOV rates.
+
+\subsubsection{Detailed Word-level Tokenization Results}
+To investigate the vocabulary bottleneck, we evaluated word-level tokenization across three vocabulary scales (5,000, 10,000, and 50,000 tokens).
+
+\begin{table}[H]
+\centering
+\caption{Word-level Tokenization Results (Scaling Effects)}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|c|c|c|c|c|}
+\hline
+\textbf{Vocab Size} & \textbf{Split} & \textbf{Enwik8} & \textbf{One Billion} & \textbf{Text8} & \textbf{WikiText-103} \\ \hline
+\multirow{2}{*}{5,000} & OOV (\%) & 15.55 & 11.72 & 16.18 & 14.84 \\ \cline{2-6}
+& Comp. Ratio & 0.209 & 0.196 & 0.170 & 0.189 \\ \hline
+\multirow{2}{*}{10,000} & OOV (\%) & 10.43 & 6.85 & 10.37 & 9.65 \\ \cline{2-6}
+& Comp. Ratio & 0.209 & 0.196 & 0.169 & 0.189 \\ \hline
+\multirow{2}{*}{50,000} & OOV (\%) & \textbf{3.41} & \textbf{1.31} & \textbf{2.77} & \textbf{2.76} \\ \cline{2-6}
+& Comp. Ratio & 0.209 & 0.196 & 0.169 & 0.189 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Insights from Word-level Sweeps:}
+\begin{itemize}
+    \item \textbf{Vocab 5k:} A 5,000-word limit causes severe semantic loss, with OOV rates spiking to $\sim$16\% on Text8 and Enwik8.
+    \item \textbf{Vocab 10k:} Doubling the vocabulary size roughly halves the OOV rate on the One Billion Word dataset, yet $\sim$10\% OOV on other benchmarks remains problematic.
+    \item \textbf{Vocab 50k:} At 50,000 tokens, the tokenizer achieves acceptable semantic retention (OOV $\le$ 3.4\%) and maintains high compression efficiency (0.16--0.20), though it still cannot reach the 0\% OOV threshold required for total robustness.
+\end{itemize}
+
+\subsubsection{Character-level Tokenization Results}
+Character-level tokenization treats every individual character as a distinct token, completely eliminating OOV at the cost of extreme sequence inflation.
+
+\begin{table}[H]
+\centering
+\caption{Character-level Tokenization Results}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Metric (Test Split)} & \textbf{Enwik8} & \textbf{One Billion} & \textbf{Text8} & \textbf{WikiText-103} \\ \hline
+\textbf{Absolute Vocab Size} & \textbf{52} & \textbf{52} & \textbf{31} & \textbf{52} \\ \hline
+Avg Seq Length & 925.72 & 135.27 & 1178.08 & 431.72 \\ \hline
+OOV Rate (\%) & 0 & 0 & 0 & 0 \\ \hline
+Compression Ratio & 1.000 & 1.000 & 1.000 & 1.000 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Insights from Character-level Trials:}
+\begin{itemize}
+    \item \textbf{Microscopic Vocabulary:} Uses only 31--52 tokens, drastically reducing the embedding memory footprint.
+    \item \textbf{Sequence Inflation:} Sequence lengths explode (e.g., $\sim$1178 on Text8), placing an immense computational burden on recurrent models and hindering long-term context capture.
+\end{itemize}
+
+\subsubsection{BPE Results and Vocabulary Scaling}
+BPE serves as the optimal bridge, providing complete OOV elimination while maintaining compression ratios near those of word-level models.
+
+\input{sections/bpe_K}
+
+Diving into the results from varying $K$ shown in Figure~\ref{fig:compression_one_billion}, we see a classic "elbow" pattern in the relationship between $K$ and $L_{avg}$. Increasing $K$ from 2,000 to 8,000 yields a substantial reduction in sequence length across all benchmarks. However, further increasing $K$ from 32,000 to 50,000 results in marginal efficiency gains. This observation justifies the common practice in modern LLMs of setting the vocabulary budget around 32k--50k. Beyond this threshold, the linear growth in memory cost for the embedding matrix and the computational overhead of the output Softmax layer outweigh the negligible gains in sequence compression.
+
+\subsection{Evaluation of Language Model Performance}
+The downstream impact of tokenization is evaluated by training LSTM-based language models across different corpora and vocabulary configurations.
+
+\subsubsection{BPE Impact on Language Model Performance}
+The training dynamics across the two most complex benchmarks, \textit{One Billion Word} and \textit{WikiText-103}, reveal several key insights into the synergy between BPE and language modeling.
+
+\input{sections/lm_comp}
+
+While the validation perplexity on \textit{WikiText-103} exhibited a sharp reduction (1521.50 $\rightarrow$ 759.99) over five epochs (or three in the unified setup), the convergence on \textit{One Billion Word} was markedly slower. Furthermore, a significantly higher training throughput was observed in lower-entropy corpora, reflecting BPE's adaptive compression.
+
+\input{sections/lm_metric}
+
+The comparison between different vocabulary budgets on the WikiText-103 dataset reveals an interesting counter-intuitive result:
+\begin{itemize}
+    \item \textbf{Convergence Rate:} Contrary to the expectation that a larger vocabulary ($K=36k$) would facilitate better learning, the $K=16k$ configuration achieved a significantly lower final validation perplexity. This suggests that for a model of this scale (LSTM with 256 hidden units), a smaller, more dense vocabulary allows the model to learn token representations more effectively, as the parameter space for the embedding layer is smaller and easier to optimize.
+    \item \textbf{Training Throughput:} There is a notable difference in computational cost. The $K=16k$ model trained significantly faster than the $K=36k$ model. This overhead is due to the larger Softmax layer at the output, which must compute probabilities over a wider range of tokens.
+    \item \textbf{Information Bottleneck:} The higher perplexity of BPE-36k indicates that with a limited hidden size, increasing $K$ too much may lead to "sparsity" in token occurrences during training. The $K=16k$ model benefits from seeing each subword unit more frequently.
+\end{itemize}
+
+\subsubsection{Analysis of Tokenizers Impact on Language Model Performance}
+To further examine the trade-offs across all tokenization families, we focus on five representative Enwik8 runs to compare perplexity and training speed under a fixed 3-epoch budget.
+
+\begin{table}[H]
+\centering
+\caption{Enwik8 LM Results by Tokenizer Run (3 Epochs)}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Tokenizer Run} & \textbf{Effective Vocab} & \textbf{Final Validation PPL} & \textbf{Avg Epoch Time (s)} \\ \hline
+word\_2000 & 2000 & 20.853 & 107.805 \\ \hline
+word\_36000 & 36000 & 91.595 & 247.414 \\ \hline
+bpe\_2000 & 2000 & 53.018 & 540.036 \\ \hline
+bpe\_36000 & 36000 & 178.612 & 255.976 \\ \hline
+char\_2000 & 52 & 3.786 & 345.279 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Perplexity and Speed Analysis:}
+\begin{itemize}
+    \item \textbf{Best Perplexity:} The character-level model obtains the lowest validation perplexity (3.786). However, this is achieved at a significant computational cost (345 s/epoch) due to sequence length.
+    \item \textbf{Best Speed:} \texttt{word\_2000} is the fastest (107 s/epoch). Increasing the word vocabulary to 36k degrades both speed and perplexity, likely due to optimization sparsity.
+    \item \textbf{BPE Scalability:} In BPE, increasing the vocabulary from 2k to 36k significantly improves speed (540s $\rightarrow$ 255s) because it shortens the sequences, though perplexity increases slightly under this fixed-epoch budget.
+\end{itemize}
+
+Under this specific configuration, \texttt{word\_2000} provides a strong speed-quality trade-off, while \texttt{char\_2000} minimizes perplexity at the cost of training time. BPE remains the most scalable solution for larger budgets and open-vocabulary scenarios.
