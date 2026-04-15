@@ -1,0 +1,4 @@
+dataset,tokenizer,vocab_size,final_val_ppl,final_val_bpc,avg_epoch_time,embedding_size,hidden_size
+text8,bpe_36000,36000,inf,inf,0.0,128,256
+wikitext103,bpe_16000,16000,inf,inf,0.0,128,256
+one_billion,bpe_16000,16000,inf,inf,0.0,128,256
