@@ -1,139 +1,140 @@
-# Tokenization and NLP Preprocessing Project
+# NLP Tokenization and Language Modeling Assignment
 
-This project implements and compares word-level, character-level, and BPE tokenization across four benchmark corpora:
+This repository compares Word, Character, and BPE tokenization on:
 
-1. One Billion Word Benchmark
+1. One Billion Word
 2. WikiText-103
 3. Text8
 4. Enwik8
 
-It also runs a controlled LSTM language modeling experiment using one selected dataset (WikiText-103 or Text8) to compare tokenization effects on perplexity and training speed.
+It also runs LSTM language-model experiments and generates analysis tables/plots.
 
-## Folder Layout
+## 1. Requirements
 
-```text
-project/
-├── data/
-│   └── download_data.py
-├── preprocessing/
-│   └── preprocess.py
-├── tokenizers_impl/
-│   ├── word_tokenizer.py
-│   ├── char_tokenizer.py
-│   └── bpe_tokenizer.py
-├── experiments/
-│   ├── lm_model.py
-│   └── train_lm.py
-├── analysis/
-│   ├── compare_metrics.py
-│   └── generate_report.py
-├── report/
-│   └── report_template.md
-├── requirements.txt
-└── README.md
-```
+- Python 3.9 or newer
+- pip
+- Optional: conda (if you prefer conda environments)
+- Optional: Pandoc (only needed for PDF export in report generation)
 
-## Setup
+## 2. Environment Setup
 
-Python 3.9+ is required.
+From the repository root:
+
+### Option A: venv (recommended)
+
+Linux/macOS:
 
 ```bash
-cd project
-conda run -n nlp python -m pip install -r requirements.txt
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-## Data Preparation
+Windows PowerShell:
 
-The repository already includes some raw datasets under `../data`. The script below checks local availability and downloads missing datasets.
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+### Option B: conda
 
 ```bash
-conda run -n nlp python data/download_data.py --raw-data-dir ../data
+conda create -n nlp-assignment python=3.10 -y
+conda activate nlp-assignment
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-## Preprocessing
+## 3. Reproduce Results (End-to-End)
 
-Run preprocessing for all datasets:
+The commands below are the reproducible pipeline used by this project.
+
+### Step 1: Download/prepare raw datasets
 
 ```bash
-conda run -n nlp python preprocessing/preprocess.py --raw-data-dir ../data --output-dir artifacts/processed --dataset all
+python data/download_data.py --raw-data-dir data/raw
 ```
 
-Optional: use a 10% subset of One Billion Word for faster experiments.
+Notes:
+- One Billion is very large. If needed, skip it during download:
 
 ```bash
-conda run -n nlp python preprocessing/preprocess.py --raw-data-dir ../data --output-dir artifacts/processed --dataset one_billion --one-billion-subset 0.1
+python data/download_data.py --raw-data-dir data/raw --skip-one-billion
 ```
 
-## Tokenization Metrics and Plots
-
-Compute tokenization metrics for all datasets and generate comparison plots:
+### Step 2: Preprocess datasets
 
 ```bash
-conda run -n nlp python analysis/compare_metrics.py --processed-dir artifacts/processed --output-dir artifacts/results
+python preprocessing/preprocess.py --raw-data-dir data/raw --output-dir artifacts/processed --dataset all --seed 42
 ```
 
-This generates:
-
-- `artifacts/results/tokenization_metrics.csv`
-- `artifacts/results/sequence_lengths.csv`
-- `artifacts/results/plots/vocab_size_comparison.png`
-- `artifacts/results/plots/sequence_length_distribution.png`
-- `artifacts/results/plots/compression_ratio_comparison.png`
-- `artifacts/results/summary_table.csv`
-
-## Language Model Experiment
-
-Run LSTM LM with one tokenizer at a time:
+Faster preprocessing for One Billion (10% file subset):
 
 ```bash
-conda run -n nlp python experiments/train_lm.py \
-  --processed-dir artifacts/processed \
-  --dataset wikitext103 \
-  --tokenizer word \
-  --epochs 5 \
-  --batch-size 32 \
-  --sequence-length 128 \
-  --output-dir artifacts/lm
+python preprocessing/preprocess.py --raw-data-dir data/raw --output-dir artifacts/processed --dataset one_billion --one-billion-subset 0.1 --seed 42
 ```
 
-BPE example:
+### Step 3: Run tokenizer experiments (Word/Char/BPE)
+
+Example vocab sweep used in this assignment:
 
 ```bash
-conda run -n nlp python experiments/train_lm.py \
-  --processed-dir artifacts/processed \
-  --dataset text8 \
-  --tokenizer bpe \
-  --bpe-vocab-size 10000 \
-  --epochs 5 \
-  --batch-size 32 \
-  --sequence-length 128 \
-  --output-dir artifacts/lm
+python main.py --processed-dir artifacts/processed --report-dir report --run-tokenizer-experiments --vocab-sizes 2000 8000 16000 32000 36000 50000
 ```
 
-After running all tokenizer variants, build LM comparison plot:
+Outputs are written per dataset under report/<dataset>/{word,char,bpe}.
+
+### Step 4: Run LM experiments
 
 ```bash
-conda run -n nlp python analysis/compare_metrics.py \
-  --processed-dir artifacts/processed \
-  --output-dir artifacts/results \
-  --lm-results-dir artifacts/lm
+python main.py --processed-dir artifacts/processed --run-lm-experiments --lm-output-dir artifacts/lm --vocab-sizes 2000 8000 16000 32000 36000 50000
 ```
 
-## Report Generation
+Important behavior:
+- main.py currently runs LM for text8 and enwik8 only.
+- one_billion and wikitext103 are skipped by design in LM orchestration.
 
-Generate report markdown and optional PDF (requires Pandoc installed on system):
+### Step 5: Build comparison CSVs and plots
 
 ```bash
-conda run -n nlp python analysis/generate_report.py \
-  --results-dir artifacts/results \
-  --lm-results-dir artifacts/lm \
-  --output-markdown report/final_report.md \
-  --output-pdf report/final_report.pdf
+python analysis/compare_metrics.py --processed-dir artifacts/processed --output-dir artifacts/results --lm-results-dir artifacts/lm --word-vocab-size 50000 --bpe-vocab-sizes 2000 8000 16000 32000 36000 50000
 ```
 
-If Pandoc is unavailable, markdown output is still generated.
+### Step 6: Generate report markdown and optional PDF
 
-## Reproducibility
+```bash
+python analysis/generate_report.py --results-dir artifacts/results --lm-results-dir artifacts/lm --output-markdown report/final_report.md --output-pdf report/final_report.pdf
+```
 
-- Global random seed: 42
-- All preprocessing and tokenization steps are deterministic where possible.
+If Pandoc is not installed, markdown is still generated and PDF export is skipped.
+
+## 4. Fast Reproduction (Minimal)
+
+If you only need a quick run for Enwik8 + Text8:
+
+```bash
+python data/download_data.py --raw-data-dir data/raw --skip-one-billion --skip-wikitext
+python preprocessing/preprocess.py --raw-data-dir data/raw --output-dir artifacts/processed --dataset text8 --seed 42
+python preprocessing/preprocess.py --raw-data-dir data/raw --output-dir artifacts/processed --dataset enwik8 --seed 42
+python main.py --processed-dir artifacts/processed --report-dir report --run-tokenizer-experiments --run-lm-experiments --lm-output-dir artifacts/lm --vocab-sizes 2000 36000
+python analysis/compare_metrics.py --processed-dir artifacts/processed --output-dir artifacts/results --lm-results-dir artifacts/lm --bpe-vocab-sizes 2000 36000
+python analysis/plot_enwik8_lm_table.py
+```
+
+## 5. Key Output Paths
+
+- Processed splits: artifacts/processed/<dataset>/{train,validation,test}.txt
+- Tokenizer metrics JSONs: report/<dataset>/{word,char,bpe}/*_metrics_*.json
+- LM outputs: artifacts/lm/<dataset>/<tokenizer_run>/
+- Aggregated analysis: artifacts/results/
+- Enwik8 4.5 charts script output: report/enwik8/final_analysis/plots/
+
+## 6. Reproducibility Notes
+
+- Seed is fixed to 42 in preprocessing and LM scripts unless overridden.
+- Exact training time can vary by CPU/GPU, CUDA, and PyTorch backend settings.
+- Downloaded datasets may take significant disk space and time (especially One Billion).
