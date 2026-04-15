@@ -147,7 +147,7 @@ def parse_args() -> argparse.Namespace:
         "--tokenizer", type=str, default="bpe", choices=["word", "char", "bpe"]
     )
     parser.add_argument("--word-vocab-size", type=int, default=50000)
-    parser.add_argument("--bpe-vocab-size", type=int, default=10000)
+    parser.add_argument("--bpe-vocab-size", type=int, default=36000)
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--sequence-length", type=int, default=128)
@@ -160,12 +160,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--max-validation-samples", type=int, default=None)
     parser.add_argument("--output-dir", type=Path, default=Path("artifacts/lm"))
     return parser.parse_args()
-
+import gc
 
 def main() -> None:
+    torch.cuda.empty_cache()
+    gc.collect()
+
     args = parse_args()
     set_seed(args.seed)
-
+    
     processed_dir = args.processed_dir.resolve()
     train_samples = read_split(
         processed_dir, args.dataset, "train", max_samples=args.max_train_samples
@@ -176,7 +179,7 @@ def main() -> None:
         "validation",
         max_samples=args.max_validation_samples,
     )
-
+    total_valid_chars = sum(len(s) for s in valid_samples)
     print(
         f"Loaded {len(train_samples)} training samples and {len(valid_samples)} validation samples."
     )
@@ -209,6 +212,9 @@ def main() -> None:
     tokenizer.save(tokenizer_path)
 
     metrics_rows = []
+    best_val_ppl = float("inf")
+    total_train_time = 0.0
+
     for epoch in range(1, args.epochs + 1):
         model.train()
         epoch_start = time.perf_counter()
@@ -264,6 +270,30 @@ def main() -> None:
             f"train_ppl={train_perplexity:.2f}, val_ppl={val_perplexity:.2f}, "
             f"time={epoch_time:.2f}s"
         )
+
+    avg_epoch_time = total_train_time / args.epochs
+    # Bits Per Character: log2(PPL) * (num_tokens / num_chars)
+    final_bpc = (math.log2(best_val_ppl) * len(valid_token_ids) / total_valid_chars) if total_valid_chars > 0 else 0.0
+
+    master_metrics_path = args.output_dir.resolve() / "overall_lm_comparison.csv"
+    file_exists = master_metrics_path.exists()
+    
+    master_row = {
+        "dataset": args.dataset,
+        "tokenizer": run_name,
+        "vocab_size": vocab_size,
+        "final_val_ppl": round(best_val_ppl, 4),
+        "final_val_bpc": round(final_bpc, 4),
+        "avg_epoch_time": round(avg_epoch_time, 2),
+        "embedding_size": args.embedding_size,
+        "hidden_size": args.hidden_size
+    }
+
+    with master_metrics_path.open("a", encoding="utf-8", newline="") as f_master:
+        writer = csv.DictWriter(f_master, fieldnames=list(master_row.keys()))
+        if not file_exists:
+            writer.writeheader()
+        writer.writerow(master_row)
 
     model_path = run_dir / "model.pt"
     torch.save(model.state_dict(), model_path)
