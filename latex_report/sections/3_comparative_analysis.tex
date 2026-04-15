@@ -1,0 +1,46 @@
+\section{Comparative Analysis of Tokenization Strategies}
+A comprehensive comparative analysis of the proposed tokenization methods—Word-level, Character-level, and Byte Pair Encoding (BPE)—is conducted based on three critical criteria. This analysis evaluates the inherent trade-offs each method presents and how they ultimately dictate the architectural design of language models.
+
+\begin{itemize}
+    \item \textbf{Vocabulary Size}: Impact on memory footprint, embedding matrix dimensionality, and semantic coverage.
+    \item \textbf{Sequence Length}: Impact on information compression, context window limitations, and long-term dependency tracking.
+    \item \textbf{Computational Efficiency}: Impact on temporal processing bottlenecks, training speed, and inference latency.
+\end{itemize}
+
+\subsection{Vocabulary Size and Memory Footprint}
+The size of the vocabulary ($|V|$) directly dictates the dimensions of the model's first and last layers: the input embedding matrix and the final output projection layer (softmax). A larger vocabulary exponentially increases the total trainable parameters of the model.
+
+\begin{itemize}
+    \item \textbf{Word-level Tokenization:} This method inherently suffers from the sparse, long-tail distribution of natural language, dictated by Zipf's Law. To maintain an acceptable Out-of-Vocabulary (OOV) rate, the model requires an excessively large dictionary (often exceeding 50,000 to 100,000 tokens). This heavily inflates the embedding layer, consuming massive amounts of GPU memory. Furthermore, the representations of rare words in the long tail suffer from extreme sparsity; because they appear infrequently during training, their embeddings are rarely updated, leading to poor generalization and a high risk of overfitting.
+    \item \textbf{Character-level Tokenization:} In stark contrast, character-level methods utilize a radically constrained and closed vocabulary (typically between 30 to 100 tokens, encompassing standard alphabets, digits, and essential punctuation). This approach completely eliminates the OOV problem. Consequently, it shrinks the embedding matrix to a negligible size, drastically reducing the model's structural memory footprint and parameter count, making it highly suitable for strictly memory-constrained environments.
+    \item \textbf{BPE-based Tokenization:} Byte Pair Encoding (BPE) offers an elegant, data-driven mathematical compromise. By establishing a user-defined target vocabulary size (e.g., 30,000 to 50,000), BPE maintains a bounded memory footprint. Because it dynamically merges characters into subwords based on corpus frequency, it completely bypasses the OOV issue by breaking down unknown or rare words into familiar subword units. This ensures that the embedding matrix is populated entirely by dense, frequently updated representations rather than sparse rare words.
+\end{itemize}
+
+\subsection{Sequence Length and Context Window}
+Sequence length determines the temporal dimension of the input data. It dictates how effectively a sequence model (such as an LSTM or Transformer) can capture long-term semantic dependencies within a fixed computational context window.
+
+\begin{itemize}
+    \item \textbf{Word-level Tokenization:} Provides the highest text compression ratio (often compressing characters down to $\sim$17-20\% of their original count). Because an entire semantic concept (a word) is represented by a single token, the average sequence length is extremely short. This allows recurrent models to easily capture long-term semantic context spanning across multiple sentences without encountering severe vanishing gradient issues over time.
+    \item \textbf{Character-level Tokenization:} Exhibits the absolute poorest compression ratio (strictly 1.0). A single sentence must be decomposed into dozens, or even hundreds, of individual character tokens. Consequently, sequence lengths inflate drastically (typically 400\% to 600\% longer than word-level representations). This places an immense burden on the model's context window. During training, the Backpropagation Through Time (BPTT) algorithm must traverse a massively long computational graph, making it exceedingly difficult for the network to remember dependencies from the beginning of a sentence due to the vanishing gradient problem.
+    \item \textbf{BPE-based Tokenization:} Achieves an optimal, intermediate sequence length. Highly frequent words (like "the", "is", "apple") remain unified as single tokens—behaving exactly like word-level tokenization. Conversely, only rare or complex morphological words are fractured into subwords (e.g., "un-break-able"). The resulting overall sequence length is only marginally longer than a pure word-level approach, but vastly shorter and much more manageable than a character-level sequence.
+\end{itemize}
+
+\subsection{Computational Efficiency}
+Efficiency is evaluated by analyzing the primary mathematical bottlenecks during the forward and backward passes, specifically focusing on sequential unrolling (temporal steps) and the final probability distribution calculation (softmax).
+
+\begin{itemize}
+    \item \textbf{Word-level Tokenization:} While temporal processing is remarkably fast due to the short sequence lengths, the computational bottleneck abruptly shifts to the final layer. Calculating the softmax probabilities over a massive vocabulary of 50,000+ tokens at every single timestep requires massive matrix multiplications. This is highly computationally expensive, drastically slowing down both training throughput and real-time inference latency.
+    \item \textbf{Character-level Tokenization:} The softmax calculation is exceptionally cheap and lightning-fast due to the microscopic vocabulary size (e.g., 52 tokens). However, the sheer volume of sequential timesteps creates a severe temporal bottleneck. Because recurrent models process data sequentially, unrolling an LSTM for 1,000 character steps takes significantly longer than unrolling it for 200 word steps. This causes the training time per epoch to skyrocket, nullifying the speed gained from the small softmax layer.
+    \item \textbf{BPE-based Tokenization:} BPE strikes the ultimate architectural balance for modern language models. The vocabulary size is sufficiently constrained to prevent the softmax calculation from becoming a severe bottleneck, while the sequence length remains compact enough to ensure extremely fast temporal processing. Furthermore, because subwords carry intrinsic morphological meaning (unlike standalone characters that lack independent semantic value), the model converges much faster during training.
+\end{itemize}
+
+\subsection{Factors Affecting BPE Performance}
+Based on the empirical study by V\~u Ho\`ang T\`ung, the effectiveness of BPE is primarily dictated by two factors: the vocabulary budget $K$ and the entropy of the training data.
+
+\begin{itemize}
+    \item \textbf{Vocabulary Budget ($K$):} The choice of $K$ is the most critical factor. If $K$ is too low, common words may remain fragmented (e.g., \texttt{[pro, fess, ion, al]}), increasing sequence lengths and computational steps. Conversely, if $K$ is too high, the tokenizer may merge words into rare symbols that appear only once, wasting the vocabulary budget and increasing memory costs in the embedding layer ($|V| \times d$).
+    \item \textbf{Data Entropy:} BPE performance is heavily tied to the regularity of the training data. In structured datasets like \textit{WikiText-103}, frequent English morphemes allow for high reuse of merge rules. In contrast, high-entropy or noisy data like \textit{Enwik8} leads to fragmentation where merge rules are less "universal," potentially wasting the vocabulary budget.
+\end{itemize}
+
+\subsection{BPE as the "Sweet Spot"}
+The comparative evidence suggests that BPE acts as a practical "sweet spot" between the two extremes. Relative to word-level tokenization, it sacrifices only a small amount of compression while removing OOV failures. Relative to character-level tokenization, it preserves lexical coverage without exploding sequence length. This makes it the most robust choice for open-domain language modeling where both efficiency and coverage are paramount.

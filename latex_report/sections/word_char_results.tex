@@ -1,0 +1,151 @@
+\section{Experimental Setup and Results}
+\subsection{Word-level Tokenization Results}
+
+\subsubsection{Experiment 1: Baseline Vocabulary (5,000 Tokens)}
+We standardized hyperparameters (Chunk Size: 200, Seed: 42, Subset: 1.0) and evaluated a constrained vocabulary of 5,000 tokens.
+
+\begin{table}[H]
+\centering
+\caption{Detailed Tokenization Results (Vocab Size = 5,000)}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|l|c|c|c|c|}
+\hline
+\textbf{Split} & \textbf{Metric} & \textbf{Enwik8} & \textbf{One Billion} & \textbf{Text8} & \textbf{WikiText-103} \\ \hline
+\multirow{3}{*}{Train} 
+ & Avg Seq Length & 194.353 & 26.652 & 199.997 & 86.713 \\ \cline{2-6}
+ & OOV Rate (\%) & 0 & 0 & 0 & 0 \\ \cline{2-6}
+ & Compression Ratio & 0.2098 & 0.1965 & 0.1700 & 0.1910 \\ \hline
+\multirow{3}{*}{Test}  
+ & Avg Seq Length & 193.990 & 26.671 & 200.000 & 82.898 \\ \cline{2-6}
+ & OOV Rate (\%) & 15.555 & 11.718 & 16.181 & 14.844 \\ \cline{2-6}
+ & Compression Ratio & 0.2095 & 0.1965 & 0.1698 & 0.1898 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Insight:} A 5,000-word limit causes severe semantic loss. The test OOV rate aggressively spikes to $\sim$16\% on Text8 and $\sim$15.5\% on Enwik8, rendering this configuration unviable for language modeling.
+
+% ------------------------------------------------------
+% EXPERIMENT 2: VOCAB 10000
+% ------------------------------------------------------
+\subsubsection{Experiment 2: Expanding Vocabulary to 10,000 Tokens}
+
+\begin{table}[H]
+\centering
+\caption{Detailed Tokenization Results (Vocab Size = 10,000)}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|l|c|c|c|c|}
+\hline
+\textbf{Split} & \textbf{Metric} & \textbf{Enwik8} & \textbf{One Billion} & \textbf{Text8} & \textbf{WikiText-103} \\ \hline
+\multirow{3}{*}{Train} 
+ & Avg Seq Length & 194.353 & 26.652 & 199.997 & 86.713 \\ \cline{2-6}
+ & OOV Rate (\%) & 0 & 0 & 0 & 0 \\ \cline{2-6}
+ & Compression Ratio & 0.2098 & 0.1965 & 0.1700 & 0.1910 \\ \hline
+\multirow{3}{*}{Test}  
+ & Avg Seq Length & 193.990 & 26.671 & 200.000 & 82.898 \\ \cline{2-6}
+ & OOV Rate (\%) & 10.432 & 6.853 & 10.375 & 9.658 \\ \cline{2-6}
+ & Compression Ratio & 0.2095 & 0.1965 & 0.1698 & 0.1898 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Insight:} Doubling the vocabulary halves the OOV rate for the One Billion Word dataset (6.85\%). However, a $\sim$10\% OOV rate on the other datasets still leaves a significant portion of text uninterpretable.
+
+% ------------------------------------------------------
+% EXPERIMENT 3: VOCAB 50000
+% ------------------------------------------------------
+\subsubsection{Experiment 3: Scaling Vocabulary to 50,000 Tokens}
+
+\begin{table}[H]
+\centering
+\caption{Detailed Tokenization Results (Vocab Size = 50,000)}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|l|c|c|c|c|}
+\hline
+\textbf{Split} & \textbf{Metric} & \textbf{Enwik8} & \textbf{One Billion} & \textbf{Text8} & \textbf{WikiText-103} \\ \hline
+\multirow{3}{*}{Train} 
+ & Avg Seq Length & 194.353 & 26.652 & 199.997 & 86.713 \\ \cline{2-6}
+ & OOV Rate (\%) & 0 & 0 & 0 & 0 \\ \cline{2-6}
+ & Compression Ratio & 0.2098 & 0.1965 & 0.1700 & 0.1910 \\ \hline
+\multirow{3}{*}{Test}  
+ & Avg Seq Length & 193.990 & 26.671 & 200.000 & 82.898 \\ \cline{2-6}
+ & OOV Rate (\%) & 3.408 & 1.314 & 2.773 & 2.765 \\ \cline{2-6}
+ & Compression Ratio & 0.2095 & 0.1965 & 0.1698 & 0.1898 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Insight:} At 50,000 tokens, the tokenizer achieves acceptable semantic retention (OOV $\le$ 3.4\%) while maintaining high compression efficiency (0.16–0.20), resolving the missing vocabulary bottleneck.
+
+% ======================================================
+% CHARACTER-LEVEL TOKENIZATION EXPERIMENTS
+% ======================================================
+\subsection{Character-level Tokenization Results}
+This approach treats every individual character as a distinct token, fundamentally altering vocabulary constraints.
+
+\begin{table}[H]
+\centering
+\caption{Character-level Tokenization Results across Datasets}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|l|c|c|c|c|}
+\hline
+\textbf{Split} & \textbf{Metric} & \textbf{Enwik8} & \textbf{One Billion} & \textbf{Text8} & \textbf{WikiText-103} \\ \hline
+\multicolumn{2}{|c|}{\textbf{Absolute Vocab Size}} & \textbf{52} & \textbf{52} & \textbf{31} & \textbf{52} \\ \hline\hline
+\multirow{3}{*}{Test}  
+ & Avg Seq Length & 925.723 & 135.270 & 1178.084 & 431.722 \\ \cline{2-6}
+ & OOV Rate (\%) & 0 & 0 & 0 & 0 \\ \cline{2-6}
+ & Compression Ratio & 1.000 & 1.000 & 1.000 & 1.000 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Insights:}
+\begin{itemize}
+    \item \textbf{Microscopic Vocabulary:} Uses only 31-52 tokens, drastically reducing the embedding memory footprint.
+    \item \textbf{0\% OOV \& Zero Compression:} Mathematically guarantees no missing words, but offers no text compression (Ratio = 1.0).
+    \item \textbf{Sequence Inflation:} Sequence lengths explode (e.g., $\sim$1178 on Text8). This places an immense computational burden on recurrent models (LSTMs) to capture long-term context.
+\end{itemize}
+
+% ======================================================
+% BPE TOKENIZATION EXPERIMENTS
+% ======================================================
+\subsection{Byte Pair Encoding (BPE) Results}
+BPE dynamically merges frequent character pairs into subwords. We evaluated it across 16k, 32k, and 50k vocabulary sizes (Note: One Billion Word saturated at 38,379).
+
+\begin{table}[H]
+\centering
+\caption{BPE Test Metrics: Enwik8 \& One Billion Word}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Dataset} & \textbf{Metric (Test Split)} & \textbf{Vocab=16k} & \textbf{Vocab=32k} & \textbf{Vocab=50k} \\ \hline
+\multirow{2}{*}{Enwik8} 
+ & Avg Seq Length & 213.330 & 201.975 & 197.240 \\ \cline{2-5}
+ & Compression Ratio & 0.2304 & 0.2182 & 0.2131 \\ \hline
+\multirow{2}{*}{One Billion*} 
+ & Avg Seq Length & 28.984 & 28.035 & 27.829 \\ \cline{2-5}
+ & Compression Ratio & 0.2143 & 0.2073 & 0.2057 \\ \hline
+\multicolumn{5}{l}{\footnotesize \textit{*One Billion Word vocab saturated at 38,379 instead of 50,000.}}
+\end{tabular}
+\end{table}
+
+\begin{table}[H]
+\centering
+\caption{BPE Test Metrics: Text8 \& WikiText-103}
+\renewcommand{\arraystretch}{1.1}
+\begin{tabular}{|l|l|c|c|c|}
+\hline
+\textbf{Dataset} & \textbf{Metric (Test Split)} & \textbf{Vocab=16k} & \textbf{Vocab=32k} & \textbf{Vocab=50k} \\ \hline
+\multirow{2}{*}{Text8} 
+ & Avg Seq Length & 226.540 & 213.795 & 208.952 \\ \cline{2-5}
+ & Compression Ratio & 0.1923 & 0.1815 & 0.1774 \\ \hline
+\multirow{2}{*}{WikiText-103} 
+ & Avg Seq Length & 92.654 & 88.525 & 86.819 \\ \cline{2-5}
+ & Compression Ratio & 0.2146 & 0.2051 & 0.2011 \\ \hline
+\end{tabular}
+\end{table}
+
+\textbf{Unified BPE Insights:}
+\begin{itemize}
+    \item \textbf{Complete OOV Elimination:} Across all datasets, the OOV rate is strictly \textbf{0\%}. BPE successfully resolves the vocabulary bottleneck of Word-level tokenization by breaking rare words into known subwords.
+    \item \textbf{Optimal Compression:} At a 50k vocabulary, BPE achieves compression ratios (0.17 - 0.21) nearly identical to pure Word-level methods. It compresses text highly efficiently while preventing sequence inflation (unlike Character-level).
+    \item \textbf{Diminishing Returns:} Expanding the vocabulary from 16k to 32k yields a significant reduction in sequence length. However, scaling further to 50k provides only marginal improvements, indicating that an optimal balance lies around 30,000 tokens.
+\end{itemize}
+
+\textbf{Conclusion:} BPE serves as the optimal bridge. It preserves the memory efficiency of character-level models (no OOV) while retaining the computational speed and short sequence lengths of word-level models.

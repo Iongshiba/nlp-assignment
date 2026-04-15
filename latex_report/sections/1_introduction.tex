@@ -1,0 +1,21 @@
+\section{Introduction}
+
+\subsection{Context and Motivation}
+In simple terms, tokenization is the process of breaking text into smaller units, known as tokens. These tokens can be words, characters, sentences, or phrases, depending on the tokenization method used. In the development of Language Models (LMs), text preprocessing and tokenization serve as the critical interface between raw natural language data and deep learning architectures. More than just text cleaning and segmentation, it converts raw unstructured natural language into its numerical representation that computers can understand and perform statistical modeling, leading to the recent explosion of AI technologies. How we tokenize a corpus—that is, how we decide to represent our language numerically—dictates model embedding space distributions, memory complexity, and accuracy. As proven from modern benchmarks like One Billion Word or WikiText-103 representing large-scale corpora, a good tokenization strategy lays a foundational decision that impacts every subsequent stage of the pipeline.
+
+\subsection{Problem Statement}
+\label{token_probs}
+Surveying the evolution of tokenization from its earliest forms, the paradigm has consistently struggled with two core technical limitations. First is the \textbf{Vocabulary Problem (Memory vs. Meaning)}. Intuitively, for a model to understand an entire corpus, it would need an enormous "dictionary" that captures every possible word and combination so each word has its own meaningful numeric representation. This costs vast amounts of memory. Even worse, the system still falls short in robustness as it encounters unseen words, leading to the well-known Out-of-Vocabulary (OOV) issue, where such inputs are treated as complete unknowns, causing semantic loss and discontinuity.
+
+As another application-related limitation, the \textbf{Sequence Problem (Speed vs. Complexity)} emerges when we try to avoid the vocabulary explosion by decomposing text into smaller units. While this keeps the dictionary compact, it dramatically increases sequence length. Since modern architectures like Transformers scale poorly with longer sequences, both training and inference become significantly slower and more costly. On top of that, tokenization, like any other encoding method, inevitably introduces information loss: by treating sentences as a sequence of discrete numeric tokens, they may lose certain grammatical as well as semantic essences. 
+
+Thus, research in tokenization fundamentally revolves around finding a "sweet spot"—a tokenization process that produces tokenizers compact enough to be efficient and memory-friendly, yet expressive enough to preserve meaning.
+
+\subsection{Objective}
+The objective of this assignment is to conduct an empirical study comparing different tokenization strategies. Specifically, the study aims to:
+\begin{itemize}
+    \item Implement and analyze three major tokenization paradigms: Word-level, Character-level, and Byte Pair Encoding (BPE).
+    \item Evaluate the performance of these methods across diverse datasets including WikiText-103, One Billion Word, Text8, and Enwik8.
+    \item Measure the impact of vocabulary size on compression ratios and sequence lengths.
+    \item Observe how different tokenization choices affect downstream language modeling metrics such as training speed and perplexity.
+\end{itemize}

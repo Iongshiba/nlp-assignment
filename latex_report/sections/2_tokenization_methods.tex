@@ -1,0 +1,47 @@
+\section{Text Preprocessing and Tokenization Methods}
+
+\subsection{Preprocessing Pipeline}
+Before tokenization, the corpora are normalized to reduce unnecessary variation that does not contribute useful linguistic signals for the planned experiments. The preprocessing pipeline includes lowercasing, normalization of quotation marks and dashes to ASCII-friendly forms, whitespace cleanup, and filtering of unsupported symbols using a fixed regular-expression policy. This preprocessing stage ensures that differences observed later are primarily attributable to the tokenization strategies themselves rather than inconsistent text formatting.
+
+\subsection{Word-level Tokenization}
+Word-level tokenization is the most intuitive approach, where each unique word in a corpus is translated into a single token for the model by being mapped to a discrete integer ID. Formally, this process is defined by a mapping function $f: S \rightarrow \{T_1, T_2, \dots, T_n\}$ where $S$ is the raw input string and each $T_i$ belongs to a predefined vocabulary $V$. For example, the sentence "Learning NLP is fun" is translated directly into \texttt{["Learning", "NLP", "is", "fun"]}.
+
+\textbf{Advantages and Limitations:}
+\begin{itemize}
+    \item \textbf{Pros:} It preserves the clear semantic meaning of words, making the embedding space easier for the model to navigate. It also produces relatively short sequences.
+    \item \textbf{Cons:} It suffers from Zipf's Law, leading to a massive vocabulary size. This creates the "Out-of-Vocabulary" (OOV) problem, where rare words are mapped to a lossy \texttt{<UNK>} token, causing semantic loss.
+\end{itemize}
+
+\subsection{Character-level Tokenization}
+This method breaks text down into the most atomic units: individual letters and symbols. If $S$ is the input sentence and $C$ is its character-level representation, it typically holds that $|C| \gg |S|$, significantly increasing the sequence length. For example, "NLP" is decomposed into \texttt{["N", "L", "P"]}.
+
+\textbf{Advantages and Limitations:}
+\begin{itemize}
+    \item \textbf{Pros:} It results in an extremely small vocabulary (usually $|V| < 300$) and effectively has a 0\% OOV rate, as any word can be built from characters.
+    \item \textbf{Cons:} It produces much longer sequences, increasing the computational burden on the model's attention or recurrence mechanisms. It also forces the model to learn meaning from "scratch" without inherent semantic cues.
+\end{itemize}
+
+\subsection{Byte Pair Encoding (BPE)}
+BPE is a subword tokenization method serving as a hybrid between words and characters. It starts with a character-level base and iteratively merges the most frequent adjacent pairs until a target vocabulary size $K$ is reached. This allows the model to "see" relationships between related words (e.g., "play", "player", "played") by isolating shared roots.
+
+\subsubsection{Study of Methodology: The BPE Mechanics}
+Unlike Word-level tokenization, BPE is a bottom-up clustering process. To demonstrate its deterministic nature, consider a small corpus:
+\begin{itemize}
+    \item \textbf{Train:} "the player played a professional game", "the players are playing several games"
+    \item \textbf{Vocabulary Learning:} BPE learns to group high-frequency patterns. The sequence \texttt{p+l+a+y} appears frequently, forming the token \texttt{play}. Suffixes like \texttt{ing} or words like \texttt{professional} are also merged.
+    \item \textbf{Inference:} When applying these rules to "a professional plays the game", BPE recognizes \texttt{professional} and \texttt{play} as units. Even if "plays" wasn't in the train set, it can be decomposed into \texttt{[play, s]}, avoids the OOV issue.
+\end{itemize}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Feature} & \textbf{Word-level} & \textbf{Char-level} & \textbf{BPE} \\ \hline
+Vocab Size & 9 unique words & 14 unique chars & Optimized $K$ \\ \hline
+Sequence Length & 4 tokens + \texttt{<UNK>} & 32 characters & 5 subwords \\ \hline
+\end{tabular}
+\caption{Comparative metrics on a controlled long-sentence corpus}
+\label{tab:bpe_long_comp}
+\end{table}
+
+BPE serves as a "sweet spot": it breaks words into core components to ensure no information is lost while avoiding the excessive sequence lengths of character tokenization.
