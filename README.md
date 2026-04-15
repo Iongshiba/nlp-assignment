@@ -14,7 +14,6 @@ It also runs LSTM language-model experiments and generates analysis tables/plots
 - Python 3.9 or newer
 - pip
 - Optional: conda (if you prefer conda environments)
-- Optional: Pandoc (only needed for PDF export in report generation)
 
 ## 2. Environment Setup
 
@@ -103,14 +102,6 @@ Important behavior:
 ```bash
 python analysis/compare_metrics.py --processed-dir artifacts/processed --output-dir artifacts/results --lm-results-dir artifacts/lm --word-vocab-size 50000 --bpe-vocab-sizes 2000 8000 16000 32000 36000 50000
 ```
-
-### Step 6: Generate report markdown and optional PDF
-
-```bash
-python analysis/generate_report.py --results-dir artifacts/results --lm-results-dir artifacts/lm --output-markdown report/final_report.md --output-pdf report/final_report.pdf
-```
-
-If Pandoc is not installed, markdown is still generated and PDF export is skipped.
 
 ## 4. Fast Reproduction (Minimal)
 
