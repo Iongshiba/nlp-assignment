@@ -4,6 +4,7 @@ import argparse
 import csv
 import math
 import random
+import sys
 import time
 from pathlib import Path
 from typing import Iterable, List, Tuple
@@ -12,6 +13,10 @@ import numpy as np
 import torch
 from torch import nn
 from tqdm import tqdm
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 from experiments.lm_model import LSTMLanguageModel
 from tokenizers_impl.bpe_tokenizer import BPETokenizerConfig, BPETokenizerWrapper
@@ -52,7 +57,7 @@ def build_tokenizer(args: argparse.Namespace, train_samples: List[str]):
     if args.tokenizer == "word":
         tokenizer = WordTokenizer(WordTokenizerConfig(vocab_size=args.word_vocab_size))
     elif args.tokenizer == "char":
-        tokenizer = CharTokenizer(CharTokenizerConfig(max_vocab_size=None))
+        tokenizer = CharTokenizer(CharTokenizerConfig(max_vocab_size=args.char_vocab_size))
     elif args.tokenizer == "bpe":
         tokenizer = BPETokenizerWrapper(
             BPETokenizerConfig(vocab_size=args.bpe_vocab_size)
@@ -147,6 +152,7 @@ def parse_args() -> argparse.Namespace:
         "--tokenizer", type=str, default="bpe", choices=["word", "char", "bpe"]
     )
     parser.add_argument("--word-vocab-size", type=int, default=50000)
+    parser.add_argument("--char-vocab-size", type=int, default=None)
     parser.add_argument("--bpe-vocab-size", type=int, default=10000)
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -199,9 +205,16 @@ def main() -> None:
     optimizer = torch.optim.Adam(model.parameters(), lr=args.learning_rate)
     criterion = nn.CrossEntropyLoss()
 
-    run_name = (
-        args.tokenizer if args.tokenizer != "bpe" else f"bpe_{args.bpe_vocab_size}"
-    )
+    if args.tokenizer == "word":
+        run_name = f"word_{args.word_vocab_size}"
+    elif args.tokenizer == "char":
+        run_name = (
+            f"char_{args.char_vocab_size}"
+            if args.char_vocab_size is not None
+            else "char_full"
+        )
+    else:
+        run_name = f"bpe_{args.bpe_vocab_size}"
     run_dir = args.output_dir.resolve() / args.dataset / run_name
     run_dir.mkdir(parents=True, exist_ok=True)
 
